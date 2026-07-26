@@ -1,0 +1,29 @@
+name: Site monitor
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # GitHub 實際觸發約 5-10 分鐘一次
+  workflow_dispatch:
+    inputs:
+      test_alert:
+        description: 'Send a test LINE alert first'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check sites
+        env:
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+          TEST_ALERT: ${{ github.event.inputs.test_alert || 'false' }}
+        run: bash check.sh
